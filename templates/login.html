@@ -1,0 +1,45 @@
+<!DOCTYPE HTML>
+<html>
+    <head>
+        <meta charset='utf-8'>
+        <title>Login</title>
+        <h2 align="center">通用Zigbee网关</h2>
+        <link rel="icon" href="{{ url_for('static', filename='login.ico') }}">
+    </head>
+    <body>
+
+    <div align="center" style="margin-top:6%">
+
+        <form method="post">
+            {{ form.csrf_token }}
+            {{ form.username.label }}<br>
+            {{ form.username }}<br>
+            {% if form.username.errors %}
+                {% for message in form.username.errors %}
+                    <small>{{ message }}</small><br>
+                {% endfor %}
+            {% endif %}
+            {{ form.password.label }}<br>
+            {{ form.password }}<br>
+            {% if form.password.errors %}
+                {% for message in form.password.errors %}
+                    <small>{{ message }}</small><br>
+                {% endfor %}
+            {% endif %}
+            {{ form.submit }}<br>
+        </form>
+
+
+        {%for message in get_flashed_messages()%}
+            <div class="alert">{{message}}</div>
+        {%endfor%}
+
+        <p id='myTime'></p>
+
+    </div>
+    </body>
+
+    <script>setInterval('myTime.innerHTML=new Date().toLocaleString()',1000);</script>
+
+
+</html>

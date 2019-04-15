@@ -1,0 +1,20 @@
+[[source]]
+name = "pypi"
+url = "https://pypi.tuna.tsinghua.edu.cn/simple"
+verify_ssl = true
+
+[dev-packages]
+flask = "*"
+flask-socketio = "*"
+flask-login = "*"
+pyserial = "*"
+digi-xbee = "*"
+flask-wtf = "*"
+flask-sqlalchemy = "*"
+python-dotenv = "*"
+
+[packages]
+flask = "*"
+
+[requires]
+python_version = "3.6"

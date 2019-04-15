@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Data</title>
+    <link rel="icon" href="{{ url_for('static', filename='list.ico') }}">
+    <script>setInterval('myTime.innerHTML=new Date().toLocaleString()',1000);</script>
+</head>
+<body>
+<div align="center">
+    <h1>DataList</h1>
+    <span id='myTime'></span>
+
+    <h2>Have Received {{messages_received|length}} Messages</h2>
+    <div class="list-group">
+        {%for message in messages_received%}
+            --------------------
+            <h4>{{ message.name }} #{{ loop.revindex }}&nbsp&nbsp&nbsp&nbsp&nbsp{{ message.timestamp.strftime('%Y-%m-%d %H:%M:%S') }}</h4>
+            <p>{{ message.body }}</p>
+
+        {% endfor %}
+    </div>
+
+    *****************************************************<br>
+    *****************************************************
+
+    <h2>Have Send {{messages_send|length}} Messages</h2>
+    <div class="list-group">
+        {%for message in messages_send%}
+            --------------------
+            <h4>{{ message.name }} #{{ loop.revindex }}&nbsp&nbsp&nbsp&nbsp&nbsp{{ message.timestamp.strftime('%Y-%m-%d %H:%M:%S') }}</h4>
+
+            <p>{{ message.body }}</p>
+        {% endfor %}
+    </div>
+
+    <p><a id="bottom" href="#" title="Go Top">&uarr; Go Top</a></p>
+</div>
+</body>
+</html>

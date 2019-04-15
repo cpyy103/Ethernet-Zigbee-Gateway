@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>通用Zigbee网关</title>
+    <link rel="icon" href="{{ url_for('static', filename='index.ico') }}">
+    <script type="text/javascript" src="{{ url_for('static', filename='js/jquery.min.js') }}"></script>
+    <script type="text/javascript" src="{{ url_for('static', filename='js/socket.io.min.js') }}"></script>
+    <script type="text/javascript">
+        $(document).ready(function() {
+            namespace = '/test';
+            var socket = io.connect(location.protocol + '//' + document.domain + ':' + location.port + namespace);
+            socket.on('server_response', function(res) {
+                var t = res.data;
+                $("#info").prepend(
+                    '<div class="list-group">'+
+                        '<a class="list-group-item list-group-item-action flex-column">'+
+                            '<h4>*&nbsp'+t.name+'&nbsp&nbsp&nbsp&nbsp'+t.time+'</h4>'+
+                            '<p>&nbsp&nbsp&nbsp'+t.body+'</p>'+
+
+                        '</a>'+
+                    '</div>'
+                    );
+            });
+
+        });
+    </script>
+    <script>setInterval('myTime.innerHTML=new Date().toLocaleString()',1000);</script>
+</head>
+<body>
+<div align="center">
+
+    <h1>通用Zigbee网关</h1>
+    <span id='myTime'></span>
+
+    <h2>发送</h2>
+    <form method="post">
+        {{ form.csrf_token }}
+
+        {{ form.name.label }}<br>
+        {{ form.name }}<br>
+        {% if form.name.errors %}
+            {% for message in form.name.errors %}
+                <small>{{ message }}</small><br>
+            {% endfor %}
+        {% endif %}
+
+        {{ form.body.label }}<br>
+        {{ form.body }}<br>
+        {% if form.body.errors %}
+            {% for message in form.password.errors %}
+                <small>{{ message }}</small><br>
+            {% endfor %}
+        {% endif %}
+
+        {{ form.submit }}<br>
+    </form>
+
+    {%for message in get_flashed_messages()%}
+        <div class="alert">{{message}}</div>
+    {%endfor%}
+
+
+    <h2>接收</h2>
+    <div id = "info"></div>
+
+</div>
+
+</body>
+</html>
