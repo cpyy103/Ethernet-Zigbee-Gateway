@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+<div align="center">
+    <h2>删除节点</h2>
+    <form method="post">
+        {{form.csrf_token}}
+        {{ form.node.label }}<br>
+        {{ form.node }}<br>
+        {% if form.node.errors %}
+            {% for message in form.node.errors %}
+                <small>{{ message }}</small><br>
+            {% endfor %}
+        {% endif %}
+
+        {{ form.mac_addr.label }}<br>
+        {{ form.mac_addr }}<br>
+        {% if form.mac_addr.errors %}
+            {% for message in form.mac_addr.errors %}
+                <small>{{ message }}</small><br>
+            {% endfor %}
+        {% endif %}
+
+        {{ form.submit }}<br>
+    </form>
+    {%for message in get_flashed_messages()%}
+        <div class="alert">{{message}}</div>
+    {%endfor%}
+
+</div>
+</body>
+</html>

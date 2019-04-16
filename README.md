@@ -14,22 +14,37 @@
 ***如果没有安装pipenv,可以通过pip安装（pip install pipenv）***
 
 **其他**  
-路由 
+***路由***
 
     flask routes
     
 
     Endpoint  Methods    Rule
     --------  ---------  -----------------------
-    dataList  GET        /data
-    get_data  POST       /post_pi
-    hello     GET        /
-    hello     GET        /hello/<name>
-    index     GET, POST  /index
-    login     GET, POST  /login
-    logout    GET        /logout
-    static    GET        /static/<path:filename>
-帮助
+    dataList       GET        /data
+    delete         GET, POST  /delete
+    devices        GET        /devices
+    discover       GET        /discover
+    discover_init  GET        /discover_init
+    hello          GET        /
+    hello          GET        /hello/<name>
+    index          GET, POST  /index
+    login          GET, POST  /login
+    logout         GET        /logout
+    static         GET        /static/<path:filename>
+
+`ip为本地环回测试`
+- ***127.0.0.1:5000/data***  显示数据
+- ***127.0.0.1:5000/delete***  删除一个zigbee节点
+- ***127.0.0.1:5000/devices*** 展示zigbee节点
+- ***127.0.0.1:5000/discover*** 发现/添加zigbee节点
+- ***127.0.0.1:5000/discover_init*** 删除所有节点记录，重新添加节点
+- ***127.0.0.1:5000/index*** 主界面（登录后自动跳转）
+- ***127.0.0.1:5000/login*** 登陆
+- ***127.0.0.1:5000/logout*** 登出 
+
+
+**帮助**
 
     flask --help
 
@@ -42,15 +57,14 @@
     run     Runs a development server.
     shell   Runs a shell in the app context.
 
-其中  
-初始化数据库
+***初始化数据库*** `利用txt保存数据，数据库仅保存管理员信息（将数据全保存至数据库失败了。。。）`
 
     flask initdb
-初始化（更新用户信息）
+初始化（更新管理员信息）
 
     flask init
 
-**运行**  
+**运行**   ***运行前需修改xbees.py中的串口及波特率，及确保xbee模块能顺利组网***  
 理论上
 
     flask run
@@ -60,7 +74,7 @@
 可以使用
 
     python app.py
-然后就可以在浏览器输入 ***127.0.0.1:5000*** 获取界面（本地测试）
+然后就可以在浏览器输入 ***127.0.0.1:5000*** 获取界面
 
 **登陆** ***127.0.0.1:5000/login***
 <div align=center><img width="200" height="170" src="./picture/login.jpg"/></div>

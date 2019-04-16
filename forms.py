@@ -15,3 +15,8 @@ class SendForm(FlaskForm):
     body = TextAreaField('Message', validators=[DataRequired()])
     submit = SubmitField()
 
+
+class NodeDeleteForm(FlaskForm):
+    node = StringField('Node')
+    mac_addr = StringField('Mac_Addr')
+    submit = SubmitField()

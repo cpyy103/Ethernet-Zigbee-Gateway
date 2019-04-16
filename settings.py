@@ -3,6 +3,7 @@ import os
 import sys
 
 
+
 WIN = sys.platform.startswith('win')
 if WIN:
     prefix = 'sqlite:///'

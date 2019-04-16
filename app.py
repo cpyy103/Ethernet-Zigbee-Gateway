@@ -1,13 +1,13 @@
 # -*- coding:utf-8 -*-
-from flask import Flask, flash, render_template, redirect, url_for, request
+from flask import Flask, flash, render_template, redirect, url_for
 from flask_login import LoginManager, login_required, login_user, current_user, logout_user
 from flask_socketio import SocketIO
 from threading import Lock
-from forms import LoginForm, SendForm
-from models import Admin, Received, Send, db
-from xbees import XBEE_ADDR, device, xbee_send_message
+from forms import LoginForm, SendForm, NodeDeleteForm
+from models import Admin, db
+from xbees import XBEE_ADDR, device, xbee_send_message, discover_devices, RECEIVED_DATA
 import click
-
+import time
 
 
 app = Flask(__name__)
@@ -21,8 +21,6 @@ socketIO = SocketIO(app)
 
 thread = None
 thread_lock = Lock()
-
-pi_received_data = []
 
 
 @login_manager.user_loader
@@ -40,15 +38,16 @@ def test():
 
 
 def background_thread():
-    global pi_received_data
+    global RECEIVED_DATA
     while True:
         socketIO.sleep(1)
-        if pi_received_data:
-            while pi_received_data:
-                data = {'name':pi_received_data[0][0],'body':pi_received_data[0][1],'time':pi_received_data[0][2]}
+        if RECEIVED_DATA:
+            while RECEIVED_DATA:
+                data = {'name':RECEIVED_DATA[0][0],'body':RECEIVED_DATA[0][1],'time':RECEIVED_DATA[0][2]}
                 socketIO.emit('server_response',
                               {'data': data}, namespace='/test')
-                pi_received_data.pop(0)
+
+                RECEIVED_DATA.pop(0)
 
 
 @app.route('/')
@@ -81,9 +80,34 @@ def login():
 @app.route('/data')
 @login_required
 def dataList():
-    messages_send = Send.query.order_by(Send.timestamp.desc()).all()
-    messages_received = Received.query.order_by(Received.timestamp.desc()).all()
-    return render_template('list.html',messages_send=messages_send, messages_received=messages_received)
+    s = '<div align="center"><h1>DataList</h1>'
+    t = time.strftime('%Y_%m_%d')
+    with open('Received_' + t + '.txt', 'a+') as f:
+        f.seek(0, 0)
+        data = f.readlines()
+
+    s += '<h2>Have Received %s Messages</h2>' % str(len(data))
+    for i in data:
+        j = i.split()
+        s += '-------------------------'
+        s += '<h4>* %s&nbsp&nbsp&nbsp&nbsp%s</h4>' % (j[2],j[-1])
+        s += '<p>%s</p>'% (' '.join(j[4:-2]))
+    s += '******************************************************************<br>'
+    s += '******************************************************************'
+
+    with open('Send_' + t + '.txt', 'a+') as f:
+        f.seek(0, 0)
+        data = f.readlines()
+
+    s += '<h2>Have Send %s Messages</h2>' % str(len(data))
+    for i in data:
+        j = i.split()
+        s += '-------------------------'
+        s += '<h4>* %s&nbsp&nbsp&nbsp&nbsp%s</h4>' % (j[2], j[-1])
+        s += '<p>%s</p>' % (' '.join(j[4:-2]))
+
+    s += '</div>'
+    return s
 
 
 @app.route('/logout')
@@ -95,7 +119,6 @@ def logout():
 
 
 def sendData(name, body):
-    print(name, body)
     xbee_send_message(device, XBEE_ADDR[name], body)
 
 
@@ -106,36 +129,79 @@ def index():
     if form.validate_on_submit():
         name=form.name.data
         body=form.body.data
-        send=Send(name=name, body=body)
-        db.session.add(send)
-        db.session.commit()
+
         if name in XBEE_ADDR:
             sendData(name, body)
+            t = time.localtime()
+            t1 = time.strftime('%Y_%m_%d', t)
+            t2 = time.strftime('%H:%M:%S', t)
+            with open('Send_' + t1 + '.txt', 'a+') as f:
+                f.write('Send to %s : %s  at %s\n' % (name, body, t2))
             flash('Name:%s   Message:%s     Send Success !' %(name,body))
         else:
             flash('No Such Node')
 
-        # sendData(name,body)
         return redirect(url_for('index'))
 
     return render_template('index.html', form=form)
 
 
-#从树莓派接收到数据
-@app.route('/post_pi',methods=['POST'])
-def get_data():
-    global pi_data
-    import time
-    name = request.form['name']
-    body = request.form['body']
-    received=Received(name=name, body=body)
+@app.route('/discover')
+@login_required
+def discover():
+    discover_devices(device)
+    return redirect(url_for('devices'))
 
-    time = time.strftime('%Y-%m-%d %H:%M:%S')
-    pi_received_data.append((name, body, time))
 
-    db.session.add(received)
-    db.session.commit()
-    return 'Data Received'
+@app.route('/discover_init')
+@login_required
+def discover_init():
+    XBEE_ADDR.clear()
+    discover_devices(device)
+    return redirect(url_for('devices'))
+
+
+@app.route('/devices')
+@login_required
+def devices():
+    s = '<div align="center">'
+    for i, j in XBEE_ADDR.items():
+        s += '<p>'+i+' : '+j+'</p>'
+        # print(i,j)
+    s+='</div>'
+    return s
+
+
+@app.route('/delete',methods=['GET','POST'])
+@login_required
+def delete():
+    form = NodeDeleteForm()
+    if form.node.data or form.mac_addr.data:
+        if form.node.data:
+            n = form.node.data
+            if n in XBEE_ADDR.keys():
+                for i in XBEE_ADDR.keys():
+                    if i == n:
+                        del XBEE_ADDR[i]
+                        break
+                flash('Delete %s Successfully'%n)
+            else:
+                flash('No Such Node')
+
+        else:
+            n = form.mac_addr.data
+            if n in XBEE_ADDR.values():
+                for i, j in XBEE_ADDR.items():
+                    if j == n:
+                        del XBEE_ADDR[i]
+                        break
+                flash('Delete %s Successfully' % n)
+            else:
+                flash('No Such Node')
+
+        return redirect(url_for('delete'))
+
+    return render_template('delete.html',form=form)
 
 
 @app.cli.command()
@@ -174,4 +240,4 @@ def init(username, password):
 
 if __name__ == '__main__':
     socketIO.run(app, debug=True, host='0.0.0.0')
-    # app.run(debug=True, host='0.0.0.0')
+
