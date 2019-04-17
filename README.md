@@ -8,7 +8,7 @@
     cd gateway
 **安装依赖**
 
-    pipenv install --dev
+    pipenv install 
     pipenv shell
 
 ***如果没有安装pipenv,可以通过pip安装（pip install pipenv）***
@@ -101,4 +101,5 @@
 - api中采取全局变量验证登陆
 - 利用txt保存数据，数据库仅保存管理员信息（将数据全保存至数据库失败了。。。）
 - 运行前需修改xbees.py中的串口及波特率，及确保xbee模块能顺利组网
+- 在linux下把串口改成/dev/tty类似的，并修改txt权限
 - 应该写的差不多了，水平有限，可能还有很多问题 :bug:
