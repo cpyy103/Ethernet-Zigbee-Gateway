@@ -1,5 +1,5 @@
 # -*- coding:utf-8 -*-
-from flask import Flask, flash, render_template, redirect, url_for
+from flask import Flask, flash, request, render_template, redirect, url_for, json
 from flask_login import LoginManager, login_required, login_user, current_user, logout_user
 from flask_socketio import SocketIO
 from threading import Lock
@@ -22,6 +22,9 @@ socketIO = SocketIO(app)
 thread = None
 thread_lock = Lock()
 
+MY_DATA = {}
+
+LOGIN_FLAG = 0
 
 @login_manager.user_loader
 def load_user(user_id):
@@ -47,6 +50,7 @@ def background_thread():
                 socketIO.emit('server_response',
                               {'data': data}, namespace='/test')
 
+                MY_DATA[RECEIVED_DATA[0][2]] = {'name':RECEIVED_DATA[0][0],'body':RECEIVED_DATA[0][1]}
                 RECEIVED_DATA.pop(0)
 
 
@@ -75,6 +79,14 @@ def login():
         else:
             flash('No account', 'warning')
     return render_template('login.html', form=form)
+
+
+@app.route('/logout')
+@login_required
+def logout():
+    logout_user()
+    flash('Logout success','info')
+    return redirect(url_for('login'))
 
 
 @app.route('/data')
@@ -110,14 +122,6 @@ def dataList():
     return s
 
 
-@app.route('/logout')
-@login_required
-def logout():
-    logout_user()
-    flash('Logout success','info')
-    return redirect(url_for('login'))
-
-
 def sendData(name, body):
     xbee_send_message(device, XBEE_ADDR[name], body)
 
@@ -130,16 +134,16 @@ def index():
         name=form.name.data
         body=form.body.data
 
-        if name in XBEE_ADDR:
+        if name != 'node0' and name in XBEE_ADDR:
             sendData(name, body)
             t = time.localtime()
             t1 = time.strftime('%Y_%m_%d', t)
             t2 = time.strftime('%H:%M:%S', t)
             with open('Send_' + t1 + '.txt', 'a+') as f:
                 f.write('Send to %s : %s  at %s\n' % (name, body, t2))
-            flash('Name:%s   Message:%s     Send Success !' %(name,body))
+            flash('Send to %s : %s at %s Successfully !' %(name,body,t2))
         else:
-            flash('No Such Node')
+            flash('Target Node Error')
 
         return redirect(url_for('index'))
 
@@ -202,6 +206,154 @@ def delete():
         return redirect(url_for('delete'))
 
     return render_template('delete.html',form=form)
+
+
+# 登陆 http://127.0.0.1:5000/api/name?name=admin&pwd=123
+# 登陆成功 返回0
+# 账号密码错误 返回1
+# 数据库没有管理员账户 返回2
+# 之后返回的status若值为10，则表示未登陆
+@app.route('/api/login')
+def api_login():
+    global LOGIN_FLAG
+    user = request.args.get('username', 'admin')
+    pwd = request.args.get('password', '123456')
+    admin = Admin.query.first()
+    if admin:
+        if user == admin.username and admin.validate_password(pwd):
+            LOGIN_FLAG = 1
+            return json.dumps({'status': 0})
+        else:
+            return json.dumps({'status': 1})
+    else:
+        return json.dumps({'status': 2})
+
+
+@app.route('/api/logout')
+def api_logout():
+    global LOGIN_FLAG
+    if LOGIN_FLAG:
+        LOGIN_FLAG = 0
+        return json.dumps({'status': 0})
+    else:
+        return json.dumps({'status': 1})
+
+
+# 发送数据 http://127.0.0.1:5000/api/index?name=node1&body=hello
+# 发送成功返回 0
+# 发送失败返回 1
+@app.route('/api/index')
+def api_index():
+    global LOGIN_FLAG
+    if LOGIN_FLAG:
+        name = request.args.get('name','')
+        body = request.args.get('body', '')
+        if name != 'node0' and name in XBEE_ADDR:
+            sendData(name, body)
+            t = time.localtime()
+            t1 = time.strftime('%Y_%m_%d', t)
+            t2 = time.strftime('%H:%M:%S', t)
+            with open('Send_' + t1 + '.txt', 'a+') as f:
+                f.write('Send to %s : %s  at %s\n' % (name, body, t2))
+            return json.dumps({'status':0, 'message':{'name':name, 'body':body}})
+
+        return json.dumps({'status':1})
+    else:
+        return json.dumps({'status':10})
+
+
+@app.route('/api/discover')
+def api_discover():
+    global LOGIN_FLAG
+    if LOGIN_FLAG:
+        discover_devices(device)
+        return json.dumps({'status':0,'devices':XBEE_ADDR})
+    else:
+        return json.dumps({'status':10})
+
+
+@app.route('/api/discover_init')
+def api_discover_init():
+    global LOGIN_FLAG
+    if LOGIN_FLAG:
+        XBEE_ADDR.clear()
+        discover_devices(device)
+        return json.dumps({'status': 0, 'devices': XBEE_ADDR})
+    else:
+        return json.dumps({'status': 10})
+
+
+@app.route('/api/devices')
+def api_devices():
+    global LOGIN_FLAG
+    if LOGIN_FLAG:
+        return json.dumps({'status':0,'devices':XBEE_ADDR})
+    else:
+        return json.dumps({'status':10})
+
+
+@app.route('/api/delete')
+def api_delete():
+    global LOGIN_FLAG
+    if LOGIN_FLAG:
+        node = request.args.get('node', '')
+        if node in XBEE_ADDR:
+            del XBEE_ADDR[node]
+            return json.dumps({'status':0, 'nodes': XBEE_ADDR})
+        else:
+            return json.dumps({'status':1, 'nodes': XBEE_ADDR})
+    else:
+        return json.dumps({'status':10})
+
+
+@app.route('/api/my_data')
+def api_my_data():
+    global LOGIN_FLAG
+    if LOGIN_FLAG:
+        if len(MY_DATA):
+            data = MY_DATA.copy()
+            MY_DATA.clear()
+            return json.dumps({'status': 0, 'data': data})
+        else:
+            return json.dumps({'status': 1})
+    else:
+        return json.dumps({'status':10})
+
+
+@app.route('/api/received_data')
+def api_received_data():
+    global LOGIN_FLAG
+    if LOGIN_FLAG:
+        data = {}
+        with open('Received_' + time.strftime('%Y_%m_%d') + '.txt', 'a+') as f:
+            f.seek(0, 0)
+            d = f.readlines()
+
+        for i in d:
+            j = i.split()
+            data[j[-1]]={'name':j[2],'body': ' '.join(j[4:-2])}
+
+        return json.dumps({'num':len(d),'status':0,'data':data})
+    else:
+        return json.dumps({'status':10})
+
+
+@app.route('/api/send_data')
+def api_send_data():
+    global LOGIN_FLAG
+    if LOGIN_FLAG:
+        data = {}
+        with open('Send_' + time.strftime('%Y_%m_%d') + '.txt', 'a+') as f:
+            f.seek(0, 0)
+            d = f.readlines()
+
+        for i in d:
+            j = i.split()
+            data[j[-1]] = {'name': j[2], 'body': ' '.join(j[4:-2])}
+
+        return json.dumps({'num': len(d), 'status': 0, 'data': data})
+    else:
+        return json.dumps({'status': 10})
 
 
 @app.cli.command()

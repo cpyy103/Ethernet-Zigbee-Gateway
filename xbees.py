@@ -22,12 +22,11 @@ def data_received_callback(message):
     node = my_map(str(message.remote_device.get_64bit_addr()))
     data = message.data.decode('utf8')
     t = time.localtime()
-    # print('received from %s: %s at %s'%(node, data, time.strftime('%Y-%m-%d %H:%M:%S',t)))
-
-    RECEIVED_DATA.append((node, data, time.strftime('%Y-%m-%d %H:%M:%S',t)))
 
     t1 = time.strftime('%Y_%m_%d', t)
     t2 = time.strftime('%H:%M:%S', t)
+
+    RECEIVED_DATA.append((node, data, t2))
 
     with open('Received_' + t1 + '.txt', 'a') as f:
         f.write('Received from  %s : %s  at %s\n' % (node, data, t2))

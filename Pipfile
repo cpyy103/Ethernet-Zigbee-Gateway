@@ -15,6 +15,12 @@ python-dotenv = "*"
 
 [packages]
 flask = "*"
+flask-socketio = "*"
+flask-login = "*"
+pyserial = "*"
+digi-xbee = "*"
+flask-wtf = "*"
+flask-sqlalchemy = "*"
+python-dotenv = "*"
 
 [requires]
-
