@@ -13,12 +13,9 @@
             socket.on('server_response', function(res) {
                 var t = res.data;
                 $("#info").prepend(
-                    '<div class="list-group">'+
-                        '<a class="list-group-item list-group-item-action flex-column">'+
+                    '<div>'+
                             '<h4>*&nbsp'+t.name+'&nbsp&nbsp&nbsp&nbsp'+t.time+'</h4>'+
                             '<p>&nbsp&nbsp&nbsp'+t.body+'</p>'+
-
-                        '</a>'+
                     '</div>'
                     );
             });
@@ -40,25 +37,15 @@
 
         {{ form.name.label }}<br>
         {{ form.name }}<br>
-        {% if form.name.errors %}
-            {% for message in form.name.errors %}
-                <small>{{ message }}</small><br>
-            {% endfor %}
-        {% endif %}
 
         {{ form.body.label }}<br>
         {{ form.body }}<br>
-        {% if form.body.errors %}
-            {% for message in form.password.errors %}
-                <small>{{ message }}</small><br>
-            {% endfor %}
-        {% endif %}
 
         {{ form.submit }}<br>
     </form>
 
     {%for message in get_flashed_messages()%}
-        <div class="alert">{{message}}</div>
+        <div>{{message}}</div>
     {%endfor%}
 
 

@@ -92,7 +92,7 @@ def logout():
 @app.route('/data')
 @login_required
 def dataList():
-    s = '<div align="center"><h1>DataList</h1>'
+    s = '<head><title>数据汇总</title></head><div align="center"><h1>DataList</h1>'
     t = time.strftime('%Y_%m_%d')
     with open('Received_' + t + '.txt', 'a+') as f:
         f.seek(0, 0)
@@ -168,10 +168,9 @@ def discover_init():
 @app.route('/devices')
 @login_required
 def devices():
-    s = '<div align="center">'
+    s = '<head><title>Zigbee节点</title></head><div align="center"><h3>Zigbee节点</h3>'
     for i, j in XBEE_ADDR.items():
         s += '<p>'+i+' : '+j+'</p>'
-        # print(i,j)
     s+='</div>'
     return s
 

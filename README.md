@@ -1,7 +1,7 @@
-# 通用Zigbee网关 `毕设`
+# 通用Zigbee网关 
 - Zigbee网关的作用是将zigbee网络里的数据转发至其他类型的网络（如互联网），同时可以将其他网络的数据转发至zigbee网络
-- 通过flask假设web服务器，通过浏览器，人工输入数据及得到数据
-- 可以通过api获取json数据
+- flask架设web服务器，通过浏览器界面进行双向通信
+- 使用api获取json数据
 ## 程序运行
 **克隆仓库**
     
@@ -45,7 +45,7 @@
     static             GET        /static/<path:filename>    
 
 
-`ip为本地环回测试`
+`ip为本地回环测试`
 - api
 - ***127.0.0.1:5000/data***  显示数据
 - ***127.0.0.1:5000/delete***  删除一个zigbee节点
