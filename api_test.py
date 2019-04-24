@@ -3,11 +3,11 @@ import requests
 import time
 
 
-IP = 'http://127.0.0.1:5000'
+IP = 'http://192.168.1.4:5000'
 
 
 def api_login_test(name, pwd):
-    print(requests.get(IP+'/api/login?username=%s&password=%s'%(name, pwd)).text)
+    print(requests.get(IP+'/api/login?username=%s&password=%s' % (name, pwd)).text)
 
 
 def api_logout_test():
@@ -15,7 +15,7 @@ def api_logout_test():
 
 
 def api_index_test(name, body):
-    print(requests.get(IP+'/api/index?name=%s&body=%s'%(name, body)).text)
+    print(requests.get(IP+'/api/index?name=%s&body=%s' % (name, body)).text)
 
 
 def api_devices_test():
@@ -23,7 +23,7 @@ def api_devices_test():
 
 
 def api_delete_test(node):
-    print(requests.get(IP+'/api/delete?node=%s'%node).text)
+    print(requests.get(IP+'/api/delete?node=%s' % node).text)
 
 
 def api_discover_test():
@@ -55,7 +55,7 @@ if __name__ == '__main__':
     time.sleep(1)
     api_discover_init_test()
     time.sleep(1)
-    api_index_test('node1','hello world')
+    api_index_test('node1', 'hello world')
     time.sleep(1)
     for i in range(5):
         api_my_data_test()

@@ -26,6 +26,7 @@ MY_DATA = {}
 
 LOGIN_FLAG = 0
 
+
 @login_manager.user_loader
 def load_user(user_id):
     user = Admin.query.get(int(user_id))
@@ -46,18 +47,18 @@ def background_thread():
         socketIO.sleep(1)
         if RECEIVED_DATA:
             while RECEIVED_DATA:
-                data = {'name':RECEIVED_DATA[0][0],'body':RECEIVED_DATA[0][1],'time':RECEIVED_DATA[0][2]}
+                data = {'name': RECEIVED_DATA[0][0], 'body': RECEIVED_DATA[0][1], 'time': RECEIVED_DATA[0][2]}
                 socketIO.emit('server_response',
                               {'data': data}, namespace='/test')
 
-                MY_DATA[RECEIVED_DATA[0][2]] = {'name':RECEIVED_DATA[0][0],'body':RECEIVED_DATA[0][1]}
+                MY_DATA[RECEIVED_DATA[0][2]] = {'name': RECEIVED_DATA[0][0], 'body': RECEIVED_DATA[0][1]}
                 RECEIVED_DATA.pop(0)
 
 
 @app.route('/')
 @app.route('/hello/<name>')
 def hello(name='admin'):
-    return '<h1>Hello %s </h1>'%name
+    return '<h1>Hello %s </h1>' % name
 
 
 @app.route('/login', methods=['GET', 'POST'])
@@ -65,13 +66,13 @@ def login():
     if current_user.is_authenticated:
         return redirect(url_for('index'))
 
-    form=LoginForm()
+    form = LoginForm()
     if form.validate_on_submit():
-        username=form.username.data
-        password=form.password.data
-        admin=Admin.query.first()
+        username = form.username.data
+        password = form.password.data
+        admin = Admin.query.first()
         if admin:
-            if username==admin.username and admin.validate_password(password):
+            if username == admin.username and admin.validate_password(password):
                 login_user(admin)
                 flash('Welcome', 'info')
                 return redirect(url_for('login'))
@@ -102,7 +103,7 @@ def dataList():
     for i in data:
         j = i.split()
         s += '-------------------------'
-        s += '<h4>* %s&nbsp&nbsp&nbsp&nbsp%s</h4>' % (j[2],j[-1])
+        s += '<h4>* %s&nbsp&nbsp&nbsp&nbsp%s</h4>' % (j[2], j[-1])
         s += '<p>%s</p>'% (' '.join(j[4:-2]))
     s += '******************************************************************<br>'
     s += '******************************************************************'
@@ -129,10 +130,10 @@ def sendData(name, body):
 @app.route('/index', methods=['GET', 'POST'])
 @login_required
 def index():
-    form=SendForm()
+    form = SendForm()
     if form.validate_on_submit():
-        name=form.name.data
-        body=form.body.data
+        name = form.name.data
+        body = form.body.data
 
         if name != 'node0' and name in XBEE_ADDR:
             sendData(name, body)
@@ -141,7 +142,7 @@ def index():
             t2 = time.strftime('%H:%M:%S', t)
             with open('Send_' + t1 + '.txt', 'a+') as f:
                 f.write('Send to %s : %s  at %s\n' % (name, body, t2))
-            flash('Send to %s : %s at %s Successfully !' %(name,body,t2))
+            flash('Send to %s : %s at %s Successfully !' % (name, body, t2))
         else:
             flash('Target Node Error')
 
@@ -171,7 +172,7 @@ def devices():
     s = '<head><title>Zigbee节点</title></head><div align="center"><h3>Zigbee节点</h3>'
     for i, j in XBEE_ADDR.items():
         s += '<p>'+i+' : '+j+'</p>'
-    s+='</div>'
+    s += '</div>'
     return s
 
 
@@ -189,7 +190,7 @@ def delete():
                         break
                 flash('Delete %s Successfully'%n)
             else:
-                flash('No Such Node')
+                flash('Target Node Error')
 
         else:
             n = form.mac_addr.data
@@ -200,14 +201,14 @@ def delete():
                         break
                 flash('Delete %s Successfully' % n)
             else:
-                flash('No Such Node')
+                flash('Target Node Error')
 
         return redirect(url_for('delete'))
 
     return render_template('delete.html',form=form)
 
 
-# 登陆 http://127.0.0.1:5000/api/name?name=admin&pwd=123
+# 登陆 http://127.0.0.1:5000/api/login?username=admin&password=123
 # 登陆成功 返回0
 # 账号密码错误 返回1
 # 数据库没有管理员账户 返回2
@@ -235,7 +236,7 @@ def api_logout():
         LOGIN_FLAG = 0
         return json.dumps({'status': 0})
     else:
-        return json.dumps({'status': 1})
+        return json.dumps({'status': 10})
 
 
 # 发送数据 http://127.0.0.1:5000/api/index?name=node1&body=hello
@@ -254,11 +255,11 @@ def api_index():
             t2 = time.strftime('%H:%M:%S', t)
             with open('Send_' + t1 + '.txt', 'a+') as f:
                 f.write('Send to %s : %s  at %s\n' % (name, body, t2))
-            return json.dumps({'status':0, 'message':{'name':name, 'body':body}})
+            return json.dumps({'status': 0, 'message': {'name': name, 'body': body}})
 
-        return json.dumps({'status':1})
+        return json.dumps({'status': 1})
     else:
-        return json.dumps({'status':10})
+        return json.dumps({'status': 10})
 
 
 @app.route('/api/discover')
@@ -266,9 +267,9 @@ def api_discover():
     global LOGIN_FLAG
     if LOGIN_FLAG:
         discover_devices(device)
-        return json.dumps({'status':0,'devices':XBEE_ADDR})
+        return json.dumps({'status': 0, 'devices': XBEE_ADDR})
     else:
-        return json.dumps({'status':10})
+        return json.dumps({'status': 10})
 
 
 @app.route('/api/discover_init')
@@ -286,9 +287,9 @@ def api_discover_init():
 def api_devices():
     global LOGIN_FLAG
     if LOGIN_FLAG:
-        return json.dumps({'status':0,'devices':XBEE_ADDR})
+        return json.dumps({'status': 0, 'devices': XBEE_ADDR})
     else:
-        return json.dumps({'status':10})
+        return json.dumps({'status': 10})
 
 
 @app.route('/api/delete')
@@ -298,11 +299,11 @@ def api_delete():
         node = request.args.get('node', '')
         if node in XBEE_ADDR:
             del XBEE_ADDR[node]
-            return json.dumps({'status':0, 'nodes': XBEE_ADDR})
+            return json.dumps({'status': 0, 'nodes': XBEE_ADDR})
         else:
-            return json.dumps({'status':1, 'nodes': XBEE_ADDR})
+            return json.dumps({'status': 1, 'nodes': XBEE_ADDR})
     else:
-        return json.dumps({'status':10})
+        return json.dumps({'status': 10})
 
 
 @app.route('/api/my_data')
@@ -316,7 +317,7 @@ def api_my_data():
         else:
             return json.dumps({'status': 1})
     else:
-        return json.dumps({'status':10})
+        return json.dumps({'status': 10})
 
 
 @app.route('/api/received_data')
@@ -330,11 +331,11 @@ def api_received_data():
 
         for i in d:
             j = i.split()
-            data[j[-1]]={'name':j[2],'body': ' '.join(j[4:-2])}
+            data[j[-1]] = {'name': j[2], 'body': ' '.join(j[4:-2])}
 
-        return json.dumps({'num':len(d),'status':0,'data':data})
+        return json.dumps({'num': len(d), 'status': 0, 'data': data})
     else:
-        return json.dumps({'status':10})
+        return json.dumps({'status': 10})
 
 
 @app.route('/api/send_data')
@@ -370,18 +371,18 @@ def initdb(drop):
 @click.option('--username', prompt=True, help='The username used to login')
 @click.option('--password', prompt=True, hide_input=True, confirmation_prompt=True, help='The password used to login')
 def init(username, password):
-    click.echo('Initializing the database')
+    click.echo('Initializing the administrator')
     db.create_all()
 
-    admin=Admin.query.first()
+    admin = Admin.query.first()
 
     if admin is not None:
         click.echo('The administrator already exists, updating...')
         admin.username=username
         admin.set_password(password)
     else:
-        admin=Admin()
-        admin.username=username
+        admin = Admin()
+        admin.username = username
         admin.set_password(password)
         db.session.add(admin)
 

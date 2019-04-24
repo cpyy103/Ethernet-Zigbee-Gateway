@@ -11,6 +11,7 @@ BAUD_RATE = 9600
 RECEIVED_DATA = []
 XBEE_ADDR = {}
 
+
 def my_map(addr):
     for key, value in XBEE_ADDR.items():
         if value == addr:
@@ -28,36 +29,34 @@ def data_received_callback(message):
 
     RECEIVED_DATA.append((node, data, t2))
 
-    with open('Received_' + t1 + '.txt', 'a') as f:
-        f.write('Received from  %s : %s  at %s\n' % (node, data, t2))
-
+    with open('Received_' + t1 + '.txt', 'a') as file:
+        file.write('Received from  %s : %s  at %s\n' % (node, data, t2))
 
 
 def xbee_send_message(from_dev, to_addr, message):
-    from_dev.send_data(RemoteXBeeDevice(from_dev, XBee64BitAddress.from_hex_string(to_addr)),message)
+    from_dev.send_data(RemoteXBeeDevice(from_dev, XBee64BitAddress.from_hex_string(to_addr)), message)
 
 
 # 查找设备
 def discover_devices(device):
-    print('MyNode(MAC_ADDR): '+ str(device.get_64bit_addr()))
+    print('MyNode(MAC_ADDR): ' + str(device.get_64bit_addr()))
     XBEE_ADDR['node0'] = str(device.get_64bit_addr())
     net = device.get_network()
 
     def device_discovered_callback(remote):
         mac = str(remote)[:16]
-        print('Device discovered: %s '% mac)
+        print('Device discovered: %s ' % mac)
         if mac not in XBEE_ADDR.values():
             for i in range(1, 100):
                 if 'node'+str(i) not in XBEE_ADDR.keys():
                     XBEE_ADDR['node'+str(i)] = mac
                     break
 
-
     def device_discovery_finished_callback(status):
         if status == NetworkDiscoveryStatus.SUCCESS:
             print('Device discovery process finished successfully')
         else:
-            print('There was an error discovering devices: %s' %status.description)
+            print('There was an error discovering devices: %s' % status.description)
 
     net.add_device_discovered_callback(device_discovered_callback)
     net.add_discovery_process_finished_callback(device_discovery_finished_callback)
@@ -69,7 +68,6 @@ def discover_devices(device):
         time.sleep(0.1)
 
     # print(net.get_devices())
-
 
 
 with open('ser.txt','r') as f:
@@ -84,7 +82,7 @@ try:
         with open('ser.txt', 'w') as f:
             f.write('1')
     else:
-        discover_devices(device)    #组网发现设备
+        discover_devices(device)    # 组网发现设备
 
         with open('ser.txt', 'w') as f:
             f.write('0')
